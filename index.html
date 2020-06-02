@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
+        integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+
+    <title>ES6 Recap</title>
+</head>
+
+<body>
+    <div class="container">
+        <input type="text" id="search-query" placeholder="Search..." />
+        <input type="button" class="btn btn-primary" value="Filter Books" onclick="Filter()" />
+
+        <input type="button" class="btn btn-primary" value="count genre" onclick="CountBooks()" />
+        <div id="category-counter">
+
+        </div>
+        <div id="bookstore" class="row no-gutters"></div>
+    </div>
+
+    <script>
+
+        const renderBooks = (bookCollection) => {
+            const bookstore = document.querySelector("#bookstore")
+            
+            const booksTransformed = bookCollection.map(book => 
+            `<div class="card col-md-3">
+                        <a href="details.html?asin=${book.asin}" >
+                            <img src="${book.img}" class="card-img-top" alt="...">
+                        </a>
+                        <div class="card-body">
+                            <h5 class="card-title">${book.title}</h5>
+                            <p class="card-text">${book.category}</p>
+                        </div>
+                        </div>`)
+
+            bookstore.innerHTML = booksTransformed.join()
+        }
+
+        const Filter = async () => {
+            const response = await fetch("https://striveschool.herokuapp.com/books")
+            if (response.ok) { // if status code > 199 && < 299
+                const books = await response.json()
+                const searchQuery = document.querySelector("#search-query").value.toLowerCase()
+                const filteredBooks = books.filter(book => book.title.toLowerCase().indexOf(searchQuery) !== -1)
+
+                renderBooks(filteredBooks)
+            }
+        }
+
+        //window.onload = async function () { }
+        window.onload = async () => {
+            //  fetch("https://striveschool.herokuapp.com/books?offset=0&limit=50")
+            //     .then(x => resp.json())
+            //     .then(books => ...)
+
+            const response = await fetch("https://striveschool.herokuapp.com/books?offset=0&limit=50", {
+                method: "GET", // POST => creation, PUT => edit, DELETE => delete
+                headers: {},
+                //body: {}  // mainly for POST and PUT, it will contain the data we want to send
+                //body: JSON.stringify(ourObject)
+            })
+
+            if (response.ok) { // if status code > 199 && < 299
+                const books = await response.json()
+                renderBooks(books)
+            }
+        }
+
+        const CountBooks = async () => {
+            const response = await fetch("https://striveschool.herokuapp.com/books")
+            
+            if (response.ok) { // if status code > 199 && < 299
+                const books = await response.json()
+
+                //[ { title: book1, genre: fantasy }, { title: book2, genre: scifi }]
+                // =>
+                // {
+                //  fantasy: [ { title: book1, genre: fantasy } ] 
+                //  scifi: [ { title: book2, genre: scifi } ]  
+                //}
+
+                // sum total books value
+                // const res = books.reduce((accumulator, currentElement)=>{
+                //     return accumulator + currentElement.price
+                // }, 0)
+
+                // const myArray = [1, 54,5, 6, 1, 2,4, 6, 54,2,2,1,23,65, 67, 662,32, 253,2, 345,234]
+                // const oddAndEven = myArray.reduce((acc, number)=> {
+                //     if (number % 2 === 0)
+                //         acc.even ++
+                //     else
+                //         acc.odd ++
+
+                //     return acc
+                // }, {
+                //     even: 0,
+                //     odd: 0
+                // })
+
+                // const result =  { even: 0, odd: 0}
+                // myArray.forEach(number => {
+                //     if (number % 2 === 0)
+                //         result.even ++
+                //     else
+                //         result.odd ++
+                // })
+
+                const res = books.reduce((accumulator, currentElement)=>{
+                    //currentElement => single book, one after the other
+                    // is there already an array for my category?
+                    // if so, I'm gonna put myself (book) in that category
+                    // else i'm gonna create a new category
+                    if (accumulator[currentElement.category]) // if there is already an array for the given category
+                        accumulator[currentElement.category].push(currentElement) // I need to add the current element to that array
+                    else 
+                        accumulator[currentElement.category] = [ currentElement ] // I need to create a new array for the category
+                        
+                    return accumulator
+                }, {}) //initial value => empty object
+
+                const categoryCounter = document.querySelector("#category-counter")
+
+                for(let prop in res) {
+                    categoryCounter.innerHTML += `<li>${prop} - ${res[prop].length} </li>`
+                }
+
+                console.log(res)
+            }
+        }
+    </script>
+
+
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
+        integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+        integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"
+        integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
+        crossorigin="anonymous"></script>
+</body>
+
+</html>
